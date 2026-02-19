@@ -1,0 +1,14 @@
+{
+  "projects": {
+    "default": "elenor-57bde"
+  },
+  "targets": {
+    "elenor-57bde": {
+      "hosting": {
+        "sqr": [
+          "sqr"
+        ]
+      }
+    }
+  }
+}

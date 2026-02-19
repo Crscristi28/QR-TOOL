@@ -1,0 +1,21 @@
+{
+  "name": "QR Tool",
+  "short_name": "QR Tool",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#faf9f5",
+  "theme_color": "#faf9f5",
+  "orientation": "portrait",
+  "icons": [
+    {
+      "src": "https://placehold.co/192x192/faf9f5/141413.png?text=QR",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://placehold.co/512x512/faf9f5/141413.png?text=QR",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}

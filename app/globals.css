@@ -1,0 +1,46 @@
+@import "tailwindcss";
+
+@theme {
+  /* Colors */
+  --color-bg: #faf9f5;
+  --color-text: #141413;
+  --color-accent: #d97757;
+  --color-accent-hover: #c4654a;
+  --color-gray: #b0aea5;
+  --color-light-gray: #e8e6dc;
+  --color-card: #ffffff;
+
+  /* Fonts (CSS variables set by next/font/google in layout.tsx) */
+  --font-heading: var(--font-poppins), sans-serif;
+  --font-body: var(--font-lora), serif;
+  --font-mono: monospace;
+
+  /* Override ALL border-radius to 0 (sharp corners) */
+  --radius-xs: 0px;
+  --radius-sm: 0px;
+  --radius: 0px;
+  --radius-md: 0px;
+  --radius-lg: 0px;
+  --radius-xl: 0px;
+  --radius-2xl: 0px;
+  --radius-3xl: 0px;
+  --radius-4xl: 0px;
+  --radius-full: 0px;
+}
+
+body {
+  background-color: #faf9f5;
+  margin: 0;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overscroll-behavior-y: none;
+}
+
+/* Hide scrollbar */
+.no-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+.no-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+}
