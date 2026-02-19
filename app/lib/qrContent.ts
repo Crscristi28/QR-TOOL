@@ -28,6 +28,9 @@ export function buildQRContent(
   const { mainValue, secondaryValue, entryName, wifiSsid, wifiEncryption, vCardPhone, vCardEmail, vCardWeb, vCardCompany, vCardTitle } = params;
 
   let content = mainValue;
+  if (type === 'url' && content && !/^https?:\/\//i.test(content)) {
+    content = `https://${content}`;
+  }
   let name = entryName || (type === 'url' ? t.generate.types.url : t.generate.types.text);
 
   if (type === 'wifi') {

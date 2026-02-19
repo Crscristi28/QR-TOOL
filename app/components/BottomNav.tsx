@@ -14,7 +14,6 @@ const BottomNav: React.FC<BottomNavProps> = ({ activeTab, onTabChange }) => {
 
   const tabs = [
     { id: Tab.GENERATE, label: t.tabs.generate },
-    { id: Tab.SCAN, label: t.tabs.scan },
     { id: Tab.LIBRARY, label: t.tabs.library },
     { id: Tab.SETTINGS, label: t.tabs.settings },
   ];

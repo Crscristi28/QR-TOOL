@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(python3:*)",
+      "Bash(curl:*)",
+      "Bash(nmap:*)",
+      "Bash(openssl s_client:*)",
+      "Bash(done)"
+    ]
+  }
+}

@@ -11,6 +11,8 @@ import LibraryView from '@/app/components/views/LibraryView';
 import SettingsView from '@/app/components/views/SettingsView';
 import AuthView from '@/app/components/views/AuthView';
 import UnsavedChangesModal from '@/app/components/UnsavedChangesModal';
+import ScanFab from '@/app/components/ScanFab';
+import ShareAppOverlay from '@/app/components/ShareAppOverlay';
 import { QRCodeEntry } from '@/app/lib/db';
 import { useLanguage } from '@/app/lib/i18n';
 import { useAuth } from '@/app/lib/auth';
@@ -27,6 +29,11 @@ const App: React.FC = () => {
   // State for the custom modal
   const [showUnsavedModal, setShowUnsavedModal] = useState(false);
   const [pendingTab, setPendingTab] = useState<Tab | null>(null);
+
+  // FAB state
+  const [showFab, setShowFab] = useState(true);
+  const [scanOverlay, setScanOverlay] = useState<'qr' | 'barcode' | null>(null);
+  const [showShareApp, setShowShareApp] = useState(false);
 
   // Handle browser tab close / refresh
   useEffect(() => {
@@ -78,18 +85,25 @@ const App: React.FC = () => {
     setActiveTab(Tab.LIBRARY);
   };
 
+  const handleFabScan = (mode: 'qr' | 'barcode') => {
+    setScanOverlay(mode);
+  };
+
+  const handleFabMagicDecoder = () => {
+    alert('Magic Decoder — coming soon');
+  };
+
   const renderContent = () => {
     switch (activeTab) {
       case Tab.GENERATE:
         return (
           <GenerateView
             setHasUnsavedChanges={setHasUnsavedChanges}
+            setShowFab={setShowFab}
             editingCode={editingCode}
             onEditComplete={handleEditComplete}
           />
         );
-      case Tab.SCAN:
-        return <ScanView />;
       case Tab.LIBRARY:
         return <LibraryView onEdit={handleEditCode} />;
       case Tab.SETTINGS:
@@ -97,16 +111,16 @@ const App: React.FC = () => {
     }
   };
 
-  const getSubtitle = () => {
+  const getSubtitle = (): string => {
     switch (activeTab) {
       case Tab.GENERATE:
         return editingCode ? t.header.edit : t.header.create;
-      case Tab.SCAN:
-        return t.header.scan;
       case Tab.LIBRARY:
         return t.header.library;
       case Tab.SETTINGS:
         return t.header.settings;
+      default:
+        return t.header.create;
     }
   };
 
@@ -127,11 +141,40 @@ const App: React.FC = () => {
   // --- MAIN APP RENDER ---
   return (
     <Layout>
-      <Header title={t.header.title} subtitle={getSubtitle()} />
+      <Header
+        title={t.header.title}
+        subtitle={getSubtitle()}
+        shareLabel={t.header.shareApp}
+        onShareApp={() => setShowShareApp(true)}
+      />
 
       <main className="flex-1 overflow-y-auto no-scrollbar pb-24">
         {renderContent()}
       </main>
+
+      {activeTab === Tab.GENERATE && showFab && !scanOverlay && (
+        <ScanFab
+          onScanQr={() => handleFabScan('qr')}
+          onScanBarcode={() => handleFabScan('barcode')}
+          onMagicDecoder={handleFabMagicDecoder}
+        />
+      )}
+
+      {scanOverlay && (
+        <div className="fixed inset-0 z-50 bg-[#faf9f5] flex flex-col">
+          <div className="w-full max-w-[480px] mx-auto flex flex-col h-full">
+            <ScanView
+              initialMode={scanOverlay}
+              onInitialModeConsumed={() => {}}
+              onClose={() => setScanOverlay(null)}
+            />
+          </div>
+        </div>
+      )}
+
+      {showShareApp && (
+        <ShareAppOverlay onClose={() => setShowShareApp(false)} />
+      )}
 
       <BottomNav activeTab={activeTab} onTabChange={handleTabChange} />
 

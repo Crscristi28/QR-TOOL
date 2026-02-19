@@ -9,8 +9,15 @@ import { useLanguage } from '@/app/lib/i18n';
 type ScanMode = 'idle' | 'scanning-qr' | 'scanning-barcode' | 'result';
 type CodeType = 'QR' | 'Barcode';
 
-const ScanView: React.FC = () => {
+interface ScanViewProps {
+  initialMode?: 'qr' | 'barcode' | null;
+  onInitialModeConsumed?: () => void;
+  onClose?: () => void;
+}
+
+const ScanView: React.FC<ScanViewProps> = ({ initialMode, onInitialModeConsumed, onClose }) => {
   const { t } = useLanguage();
+  const isOverlay = !!onClose;
 
   // State
   const [mode, setMode] = useState<ScanMode>('idle');
@@ -25,6 +32,7 @@ const ScanView: React.FC = () => {
   const quaggaTargetRef = useRef<HTMLDivElement>(null);
   const qrScannerRef = useRef<QrScanner | null>(null);
   const quaggaRunning = useRef(false);
+  const lastScanType = useRef<'qr' | 'barcode'>('qr');
 
   // Upload Refs
   const qrInputRef = useRef<HTMLInputElement>(null);
@@ -33,9 +41,27 @@ const ScanView: React.FC = () => {
   // Cleanup on unmount
   useEffect(() => {
     return () => {
-      stopAllScanners();
+      stopAllScanners(false);
     };
   }, []);
+
+  // Auto-start scan from FAB
+  useEffect(() => {
+    if (!initialMode) return;
+
+    lastScanType.current = initialMode;
+
+    const timer = setTimeout(() => {
+      if (initialMode === 'qr') {
+        startQrScan();
+      } else if (initialMode === 'barcode') {
+        startBarcodeScan();
+      }
+      onInitialModeConsumed?.();
+    }, 150);
+
+    return () => clearTimeout(timer);
+  }, [initialMode]);
 
   const stopAllScanners = async (resetToIdle = true) => {
     if (qrScannerRef.current) {
@@ -63,8 +89,9 @@ const ScanView: React.FC = () => {
     setPermissionError(false);
     setMode('scanning-qr');
     setScanResult(null);
+    lastScanType.current = 'qr';
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     if (videoRef.current) {
        qrScannerRef.current = new QrScanner(
@@ -112,8 +139,9 @@ const ScanView: React.FC = () => {
     setPermissionError(false);
     setMode('scanning-barcode');
     setScanResult(null);
+    lastScanType.current = 'barcode';
 
-    await new Promise(resolve => setTimeout(resolve, 100));
+    await new Promise(resolve => setTimeout(resolve, 200));
 
     if (!quaggaTargetRef.current) return;
 
@@ -231,14 +259,66 @@ const ScanView: React.FC = () => {
   const reset = () => {
     setScanResult(null);
     setSaved(false);
-    setMode('idle');
+    if (isOverlay) {
+      if (lastScanType.current === 'qr') startQrScan();
+      else startBarcodeScan();
+    } else {
+      setMode('idle');
+    }
   };
+
+  const handleStop = () => {
+    stopAllScanners(true);
+    if (isOverlay) onClose?.();
+  };
+
+  const isScanning = mode === 'scanning-qr' || mode === 'scanning-barcode';
 
   // --- RENDER ---
   return (
     <div className="flex flex-col w-full h-full p-6">
-      {/* IDLE STATE - BUTTONS */}
-      {mode === 'idle' && (
+      {/* Back button — always visible in overlay */}
+      {isOverlay && (
+        <button
+          onClick={() => { stopAllScanners(false); onClose!(); }}
+          className="text-accent font-heading font-semibold text-sm flex items-center gap-1 hover:opacity-80 transition-opacity mb-4"
+        >
+          ← {t.common.back}
+        </button>
+      )}
+
+      {/* Camera elements — always in DOM so refs work */}
+      <div className={isScanning ? 'block' : 'hidden'}>
+        <div className="flex flex-col items-center w-full animate-in fade-in duration-300">
+           <div className="w-full aspect-video bg-black relative overflow-hidden mb-6">
+             <video
+               ref={videoRef}
+               className={`w-full h-full object-cover ${mode === 'scanning-barcode' ? 'hidden' : 'block'}`}
+               playsInline
+               muted
+             />
+
+             <div
+               ref={quaggaTargetRef}
+               className={`absolute inset-0 w-full h-full [&_video]:w-full [&_video]:h-full [&_video]:object-cover ${mode === 'scanning-barcode' ? 'block' : 'hidden'}`}
+             />
+
+             <div className="absolute inset-0 border-2 border-white/20 m-8 pointer-events-none flex items-center justify-center z-10">
+                <div className="w-full h-[1px] bg-red-500/50" />
+             </div>
+           </div>
+
+           <button
+             onClick={handleStop}
+             className="w-full text-center text-sm font-heading font-medium text-text border-b border-text pb-0.5 hover:opacity-70 self-center"
+           >
+             {t.scan.stopScanning}
+           </button>
+        </div>
+      </div>
+
+      {/* IDLE STATE — only in standalone mode (not overlay) */}
+      {mode === 'idle' && !isOverlay && (
         <div className="flex flex-col gap-4 mt-4 animate-in fade-in duration-300">
            {permissionError && (
              <div className="bg-red-50 border border-red-200 p-4 mb-4 text-center">
@@ -292,33 +372,12 @@ const ScanView: React.FC = () => {
         </div>
       )}
 
-      {/* SCANNING STATE */}
-      {(mode === 'scanning-qr' || mode === 'scanning-barcode') && (
-        <div className="flex flex-col items-center w-full animate-in fade-in duration-300">
-           <div className="w-full aspect-video bg-black relative overflow-hidden mb-6">
-             <video
-               ref={videoRef}
-               className={`w-full h-full object-cover ${mode === 'scanning-barcode' ? 'hidden' : 'block'}`}
-               playsInline
-               muted
-             />
-
-             <div
-               ref={quaggaTargetRef}
-               className={`absolute inset-0 w-full h-full [&_video]:w-full [&_video]:h-full [&_video]:object-cover ${mode === 'scanning-barcode' ? 'block' : 'hidden'}`}
-             />
-
-             <div className="absolute inset-0 border-2 border-white/20 m-8 pointer-events-none flex items-center justify-center z-10">
-                <div className="w-full h-[1px] bg-red-500/50" />
-             </div>
-           </div>
-
-           <button
-             onClick={() => stopAllScanners(true)}
-             className="w-full text-center text-sm font-heading font-medium text-text border-b border-text pb-0.5 hover:opacity-70 self-center"
-           >
-             {t.scan.stopScanning}
-           </button>
+      {/* IDLE in overlay — permission error only */}
+      {mode === 'idle' && isOverlay && permissionError && (
+        <div className="flex flex-col items-center justify-center flex-1">
+          <div className="bg-red-50 border border-red-200 p-4 text-center">
+            <p className="font-body text-xs text-red-600">{t.scan.cameraPermission}</p>
+          </div>
         </div>
       )}
 

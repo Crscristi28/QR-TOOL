@@ -8,7 +8,7 @@ import { buildQRContent } from '@/app/lib/qrContent';
 import { useLanguage } from '@/app/lib/i18n';
 import UnsavedChangesModal from '@/app/components/UnsavedChangesModal';
 import { QRResultDisplay } from '@/app/components/generate/QRResultDisplay';
-import { TypeSwitcher } from '@/app/components/generate/TypeSwitcher';
+import { TypeGrid } from '@/app/components/generate/TypeGrid';
 import { TextUrlForm } from '@/app/components/generate/forms/TextUrlForm';
 import { WiFiForm } from '@/app/components/generate/forms/WiFiForm';
 import { PasswordForm } from '@/app/components/generate/forms/PasswordForm';
@@ -18,18 +18,20 @@ import { ContentType, WifiEncryption } from '@/app/types';
 
 interface GenerateViewProps {
   setHasUnsavedChanges?: (hasChanges: boolean) => void;
+  setShowFab?: (show: boolean) => void;
   editingCode?: QRCodeEntry | null;
   onEditComplete?: () => void;
 }
 
 const GenerateView: React.FC<GenerateViewProps> = ({
   setHasUnsavedChanges,
+  setShowFab,
   editingCode,
   onEditComplete
 }) => {
   const { t } = useLanguage();
 
-  const [activeType, setActiveType] = useState<ContentType>('text');
+  const [activeType, setActiveType] = useState<ContentType | null>(null);
   const [generated, setGenerated] = useState(false);
   const [generatedResults, setGeneratedResults] = useState<{name: string, type: string, canvasId: string}[]>([]);
 
@@ -54,12 +56,12 @@ const GenerateView: React.FC<GenerateViewProps> = ({
   const [showTypeChangeModal, setShowTypeChangeModal] = useState(false);
   const [pendingType, setPendingType] = useState<ContentType | null>(null);
 
-  const types: { id: ContentType; label: string }[] = [
-    { id: 'text', label: t.generate.types.text },
-    { id: 'url', label: t.generate.types.url },
-    { id: 'wifi', label: t.generate.types.wifi },
-    { id: 'password', label: t.generate.types.password },
-    { id: 'vcard', label: t.generate.types.vcard },
+  const types: { id: ContentType; label: string; description: string }[] = [
+    { id: 'text', label: t.generate.types.text, description: t.generate.descriptions.text },
+    { id: 'url', label: t.generate.types.url, description: t.generate.descriptions.url },
+    { id: 'wifi', label: t.generate.types.wifi, description: t.generate.descriptions.wifi },
+    { id: 'password', label: t.generate.types.password, description: t.generate.descriptions.password },
+    { id: 'vcard', label: t.generate.types.vcard, description: t.generate.descriptions.vcard },
   ];
 
   // POPULATE FORM IF EDITING
@@ -145,6 +147,12 @@ const GenerateView: React.FC<GenerateViewProps> = ({
     setHasUnsavedChanges(getIsDirty());
   }, [mainValue, secondaryValue, entryName, wifiSsid, vCardPhone, vCardEmail, vCardWeb, vCardCompany, vCardTitle, activeType, generated, setHasUnsavedChanges, editingCode]);
 
+  // Report grid visibility to parent (FAB shows only on grid)
+  useEffect(() => {
+    if (!setShowFab) return;
+    setShowFab(!activeType && !editingCode);
+  }, [activeType, editingCode, setShowFab]);
+
   // Reset state on type change (ONLY if not editing)
   useEffect(() => {
     if (editingCode) return;
@@ -164,20 +172,24 @@ const GenerateView: React.FC<GenerateViewProps> = ({
     setGeneratedResults([]);
   }, [activeType]);
 
-  const handleTypeChange = (newType: ContentType) => {
-    if (activeType === newType) return;
+  const handleSelectType = (newType: ContentType) => {
+    setActiveType(newType);
+  };
 
-    if (!editingCode && getIsDirty()) {
-      setPendingType(newType);
+  const handleBack = () => {
+    if (getIsDirty()) {
+      setPendingType(null);
       setShowTypeChangeModal(true);
     } else {
-      setActiveType(newType);
+      setActiveType(null);
     }
   };
 
   const handleDiscardTypeChange = () => {
     if (pendingType) {
       setActiveType(pendingType);
+    } else {
+      setActiveType(null);
     }
     setPendingType(null);
     setShowTypeChangeModal(false);
@@ -203,9 +215,11 @@ const GenerateView: React.FC<GenerateViewProps> = ({
       setShowOptionals(false);
       setGenerated(false);
       setGeneratedResults([]);
+      setActiveType(null);
       return;
     }
 
+    if (!activeType) return;
     if (!mainValue && activeType !== 'wifi' && activeType !== 'vcard') return;
     if (activeType === 'vcard' && !mainValue && !secondaryValue) return;
 
@@ -299,21 +313,32 @@ const GenerateView: React.FC<GenerateViewProps> = ({
     }
   };
 
+  // Grid view — no type selected yet
+  if (!activeType && !editingCode) {
+    return (
+      <div className="flex flex-col p-6 pb-8">
+        <TypeGrid types={types} onSelect={handleSelectType} />
+      </div>
+    );
+  }
+
   return (
     <div className="flex flex-col p-6 pb-8">
-      {/* STEP 1: Type Switcher */}
-      <TypeSwitcher
-        types={types}
-        activeType={activeType}
-        disabled={generated || !!editingCode}
-        onTypeChange={handleTypeChange}
-      />
+      {/* Back button (only when not editing an existing code) */}
+      {!editingCode && !generated && (
+        <button
+          onClick={handleBack}
+          className="text-accent font-heading font-semibold text-sm flex items-center gap-1 hover:opacity-80 transition-opacity mb-6"
+        >
+          ← {t.common.back}
+        </button>
+      )}
 
       {!generated ? (
         <>
           {(activeType === 'text' || activeType === 'url') && (
             <TextUrlForm
-              type={activeType}
+              type={activeType as 'text' | 'url'}
               value={mainValue}
               setValue={setMainValue}
               entryName={entryName}
@@ -373,7 +398,6 @@ const GenerateView: React.FC<GenerateViewProps> = ({
           )}
         </>
       ) : (
-        /* Result View */
         <QRResultDisplay
           results={generatedResults}
           onDownload={handleDownload}
@@ -381,7 +405,7 @@ const GenerateView: React.FC<GenerateViewProps> = ({
         />
       )}
 
-      {/* STEP 4: Main Action Button */}
+      {/* Main Action Button */}
       <button
         onClick={handleAction}
         className={`
