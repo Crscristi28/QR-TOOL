@@ -1,6 +1,5 @@
 {
   "hosting": {
-    "target": "sqr",
     "public": "out",
     "ignore": [
       "firebase.json",

@@ -32,6 +32,11 @@ functions/lib
 # Build artifacts
 tsconfig.tsbuildinfo
 
+# Claude
+.claude/
+CLAUDE.md
+QR-TOOL-DOCS.md
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

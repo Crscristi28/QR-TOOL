@@ -28,7 +28,7 @@ export const analyze = onRequest(
       const ai = new GoogleGenAI({ apiKey: geminiApiKey.value() });
 
       const response = await ai.models.generateContent({
-        model: "gemini-2.0-flash",
+        model: "gemini-3-flash-preview",
         contents: {
           parts: [
             { inlineData: { mimeType: "image/jpeg", data: image } },
