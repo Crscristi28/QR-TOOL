@@ -1,53 +1,52 @@
+🇬🇧 English | [🇨🇿 Česky](README.cs.md)
+
 # QR Tool
 
-Universal QR code and barcode generator with AI-powered text recognition from photos. PWA application for mobile devices.
+PWA utility app for generating, scanning, and managing QR codes and barcodes. AI-powered — take a photo of a business card, password, or WiFi credentials and the app fills in the form automatically.
 
 ## Features
 
-- **Generate** — QR codes for text, URL, WiFi, vCard, passwords
-- **Scan** — Camera scanning for QR codes and barcodes (EAN, Code 128, Code 39, UPC)
-- **AI Vision** — Upload a photo and AI extracts text/codes from it
-- **Library** — Save, search and manage all your codes (IndexedDB, offline-first)
-- **Auth** — Firebase authentication (email/password, password reset)
-- **i18n** — 20 languages (cs, sk, en, de, pl, ro, hu, es, fr, it, pt, ru, uk, tr, vi, zh, ja, ko, ar, he)
+**Generate**
+- Text, URL, WiFi, password, vCard (business card)
+- Take a photo → AI extracts the content and fills the form
+- Business card scanner — one photo fills all contact fields
+- Password pairs grouped together (username + password = 2 linked QR codes)
+- Download, share, or save to library
+
+**Scan**
+- QR codes (camera or file upload)
+- Barcodes — EAN-13, EAN-8, Code 128, Code 39, UPC
+- Auto-detects content type (URL, WiFi, vCard, text)
+
+**Library**
+- All codes saved locally in IndexedDB — works offline, no cloud
+- Groups, custom names, fullscreen viewer with swipe
+- Download PNG, share via native share API
+
+**Other**
+- 20 languages
+- Firebase Auth (email + Google)
+- PWA — install on phone, works offline
+- Mobile-first design
+
+## Coming Soon
+
+- **Magic Decoder** — AI repairs and reads damaged QR codes. Currently testing with Claude models, will be integrated into the scan function
+- Data Matrix support
+- Cloud sync (optional Firestore backup)
 
 ## Tech Stack
 
-- **Frontend:** Next.js, React 19, TypeScript, Tailwind CSS 4
-- **Storage:** IndexedDB (local, offline-first)
-- **Backend:** Firebase Auth, Firestore, Cloud Functions
-- **AI:** Gemini 2.0 Flash (via Cloud Functions)
-- **Scanning:** qr-scanner (nimiq), quagga2 (barcodes)
+<p align="center">
+  <img src="https://skillicons.dev/icons?i=nextjs,react,ts,tailwind,firebase&theme=dark&perline=5" />
+</p>
 
-## Setup
+Next.js · React · TypeScript · Tailwind CSS · Firebase · Gemini API · PWA
 
-```bash
-npm install
-```
+## Status
 
-Create `.env.local`:
+🚧 **Beta** — live at [stilq-qr.web.app](https://stilq-qr.web.app)
 
-```
-NEXT_PUBLIC_FIREBASE_API_KEY=your_key
-NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN=your_domain
-NEXT_PUBLIC_FIREBASE_PROJECT_ID=your_project
-NEXT_PUBLIC_FIREBASE_STORAGE_BUCKET=your_bucket
-NEXT_PUBLIC_FIREBASE_MESSAGING_SENDER_ID=your_id
-NEXT_PUBLIC_FIREBASE_APP_ID=your_app_id
-```
+## Author
 
-## Development
-
-```bash
-npm run dev
-```
-
-## Deploy
-
-```bash
-npm run deploy
-```
-
-## License
-
-[MIT](LICENSE)
+**Cristian Bucioaca** — [cristianb.cz](https://cristianb.cz)
